@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cnbv.ConectaProcesos.Opiniones.Common\Cnbv.ConectaProcesos.Opiniones.Common.csproj" />
+    <ProjectReference Include="..\Cnbv.ConectaProcesos.Opiniones.Data\Cnbv.ConectaProcesos.Opiniones.Data.csproj" />
+    <ProjectReference Include="..\Cnbv.ConectaProcesos.Opiniones.Entities\Cnbv.ConectaProcesos.Opiniones.Entities.csproj" />
+  </ItemGroup>
+
+</Project>

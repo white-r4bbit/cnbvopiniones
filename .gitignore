@@ -1,0 +1,8 @@
+### VS Code ###
+.vscode/
+
+### VS 2022 ###
+*.vsidx
+**/bin/
+**/obj/
+**/.vs/
