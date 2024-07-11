@@ -188,6 +188,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
                 TipoDocumentoEnum documentoName = await _documentosRepository.GetByConditionAsync(i => i.Id == idDocumento);
                 archivoRespuesta.TipoElemento = elementoName.Nombre;
                 archivoRespuesta.TipoDocumento = documentoName.Nombre;
+                                
                 archivosRespuesta.Add(archivoRespuesta);
               }
               detalleOpinion.Archivos = archivosRespuesta.ToArray();
@@ -792,4 +793,3 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
     }
   }
 }
-
