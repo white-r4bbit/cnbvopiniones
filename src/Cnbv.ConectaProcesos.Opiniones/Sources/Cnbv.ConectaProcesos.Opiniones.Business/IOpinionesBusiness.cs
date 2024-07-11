@@ -61,5 +61,12 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
 
         /// Función para buscar los archivos y el detalle de la opinión padre, relacionada con el idEnvio dado por el usuario.
         Task<DescripcionOpinionExterna> ConsultarOpinionExterna(string idEnvio);
+
+        /// <summary>
+        /// Actualiza la opinion.
+        /// </summary>
+        /// <param name="ActOpinion"> Opinion a actualizar </param>
+        /// <returns></returns>
+        Task<string> ActualizarOpinion(ActualizarOpinion ActOpinion);
     }
 }

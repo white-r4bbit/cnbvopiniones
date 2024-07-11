@@ -28,7 +28,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
         private readonly KeyVaultService _keyVaultService;
 
         /// <summary>
-        /// Inyección de datos.
+        /// Inyecciï¿½n de datos.
         /// </summary>
         /// <param name="businessLayer"></param>
         /// <param name="insightsService"></param>
@@ -43,13 +43,13 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
 
 
         /// <summary>
-        /// Permite generar un proceso de solicitud de opinión.
+        /// Permite generar un proceso de solicitud de opiniï¿½n.
         /// </summary>
         /// <remarks>
-        /// Permite generar un proceso de solicitud de opinión de manera interna (áreas de la CNBV) y externa (Autoridades) sobre un folio asunto.
+        /// Permite generar un proceso de solicitud de opiniï¿½n de manera interna (ï¿½reas de la CNBV) y externa (Autoridades) sobre un folio asunto.
         /// </remarks>
-        /// <param name="opinionesModel">Información del solicitante y los receptores.</param>
-        /// <returns>"true" si la operación se ejecutó correctamente, "false" en caso contrario.</returns>
+        /// <param name="opinionesModel">Informaciï¿½n del solicitante y los receptores.</param>
+        /// <returns>"true" si la operaciï¿½n se ejecutï¿½ correctamente, "false" en caso contrario.</returns>
         [HttpPost]
         [Route("solicitaropiniones")]
         [ProducesResponseType(typeof(int), 201)]
@@ -81,7 +81,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
             finally
             {
@@ -95,8 +95,8 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
         /// <remarks>
         /// Permite traer la lista de opiniones solicitadas a diferentes receptores ya sean internos o externos a la CNBV.
         /// </remarks>
-        /// <param name="folio">Folio asignado a la opinión.</param>
-        /// <returns> Lista de las opiniones asociadas al folio que dió el usuario. </returns>
+        /// <param name="folio">Folio asignado a la opiniï¿½n.</param>
+        /// <returns> Lista de las opiniones asociadas al folio que diï¿½ el usuario. </returns>
         [HttpGet]
         [Route("obteneropiniones")]
         [ProducesResponseType(typeof(List<ObtenerOpinionesModel>), 200)]
@@ -127,19 +127,19 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
         }
 
 
         /// <summary>
-        /// Permite traer el detalle de la opinión y de los receptores con base en el folio asunto.
+        /// Permite traer el detalle de la opiniï¿½n y de los receptores con base en el folio asunto.
         /// </summary>
         /// <remarks>
         /// Permite traer los comentarios y archivos de la opinion y del receptor con base en el id del mismo.
         /// </remarks>
-        /// <param name="idOpinionReceptor"> Número de ID que le correspenda a la opión que se le solicitó a un receptor.</param>
-        /// <returns>"true" si la operación se ejecutó correctamente, "false" en caso contrario.</returns>
+        /// <param name="idOpinionReceptor"> Nï¿½mero de ID que le correspenda a la opiï¿½n que se le solicitï¿½ a un receptor.</param>
+        /// <returns>"true" si la operaciï¿½n se ejecutï¿½ correctamente, "false" en caso contrario.</returns>
         [HttpGet]
         [Route("obtenerdetalleopinion")]
         [ProducesResponseType(typeof(ObtenerDetalleOpinion), 200)]
@@ -169,15 +169,15 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
         }
 
 
         /// <summary>
-        /// Esta Operación permite cargar una lista de archivos.
+        /// Esta Operaciï¿½n permite cargar una lista de archivos.
         /// </summary>
-        /// <param name="archivosRequest">Json con la información de los archivos.</param>
+        /// <param name="archivosRequest">Json con la informaciï¿½n de los archivos.</param>
         /// <returns></returns>
         [HttpPatch]
         [ProducesResponseType(typeof(string), 200)]
@@ -207,22 +207,22 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (DbUpdateException ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status409Conflict, "Ocurrió un error al intentar guardar la información.");
+                return StatusCode(StatusCodes.Status409Conflict, "Ocurriï¿½ un error al intentar guardar la informaciï¿½n.");
             }
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
         }
 
 
 
         /// <summary>
-        /// Permite guardar la información de respuesta que da el receptor y cierra la opinión.
+        /// Permite guardar la informaciï¿½n de respuesta que da el receptor y cierra la opiniï¿½n.
         /// </summary>
         /// <remarks>
-        /// Permite guardar la información que haya respondido el receptor de la opinión, los archivos que agregó a su respuesta, sus comentarios y se cierra la opinión.
+        /// Permite guardar la informaciï¿½n que haya respondido el receptor de la opiniï¿½n, los archivos que agregï¿½ a su respuesta, sus comentarios y se cierra la opiniï¿½n.
         /// </remarks>
         /// <param name="finalizarOpinionRequest"></param>
         /// <returns></returns>
@@ -243,7 +243,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
 
                 await _businessLayer.FinalizarOpinion(finalizarOpinionRequest);
 
-                return StatusCode(StatusCodes.Status200OK, "La opinión fue finalizada correctamente.");
+                return StatusCode(StatusCodes.Status200OK, "La opiniï¿½n fue finalizada correctamente.");
             }
             catch (InvalidOperationException ex)
             {
@@ -253,20 +253,20 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (DbUpdateException ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status409Conflict, "Ocurrió un error al intentar guardar la información.");
+                return StatusCode(StatusCodes.Status409Conflict, "Ocurriï¿½ un error al intentar guardar la informaciï¿½n.");
             }
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
         }
 
         /// <summary>
-        /// Permite finalizar el proceso de una opinión externa.
+        /// Permite finalizar el proceso de una opiniï¿½n externa.
         /// </summary>
-        /// <param name="opinionExterna">Información proporcionada por la autoridad que emite su opinión.</param>
-        /// <returns>Bandera que indica que el proceso se ejecutó correctamente así como un mensaje complementario.</returns>
+        /// <param name="opinionExterna">Informaciï¿½n proporcionada por la autoridad que emite su opiniï¿½n.</param>
+        /// <returns>Bandera que indica que el proceso se ejecutï¿½ correctamente asï¿½ como un mensaje complementario.</returns>
         [HttpPatch]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
@@ -284,7 +284,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
 
                 await _businessLayer.FinalizarOpinionExterna(opinionExterna);
 
-                return StatusCode(StatusCodes.Status200OK, "La opinión fue finalizada correctamente.");
+                return StatusCode(StatusCodes.Status200OK, "La opiniï¿½n fue finalizada correctamente.");
             }
             catch (InvalidOperationException ex)
             {
@@ -294,20 +294,20 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (DbUpdateException ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status409Conflict, string.Format("Ocurrió un error al intentar guardar la información: {0}.", ex.Message));
+                return StatusCode(StatusCodes.Status409Conflict, string.Format("Ocurriï¿½ un error al intentar guardar la informaciï¿½n: {0}.", ex.Message));
             }
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
             }
         }
 
         /// <summary>
-        /// Obtiene los documentos y el detalle anexos a una solicitud de opinión.
+        /// Obtiene los documentos y el detalle anexos a una solicitud de opiniï¿½n.
         /// </summary>
-        /// <param name="idEnvio">Identificador del envío configurado en la oficialía de gestión.</param>
-        /// <returns>Arreglo de documentos y detlle de la opinión externa. </returns>
+        /// <param name="idEnvio">Identificador del envï¿½o configurado en la oficialï¿½a de gestiï¿½n.</param>
+        /// <returns>Arreglo de documentos y detlle de la opiniï¿½n externa. </returns>
         [HttpGet] 
         [Route("consultaropinionexterna")]
         [ProducesResponseType(typeof(DescripcionOpinionExterna), 200)]
@@ -339,7 +339,42 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
             catch (Exception ex)
             {
                 _insightsService.TrackException(ex, GetClientIPAddress());
-                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurrió un error general: {0}", ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("Ocurriï¿½ un error general: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Actualiza la opinion.
+        /// </summary>
+        /// <param name="ActOpinion"> Opinion a actualizar </param>
+        /// <returns></returns>
+        [HttpPatch]
+        [Route("ActualizarOpinion")]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(string), 500)]
+        [SwaggerOperation(OperationId = "ActualizarOpinion")]
+        public async Task<ActionResult> ActualizarOpinion(ActualizarOpinion actOpinion)
+        {
+            try
+            {
+                string jsonData = JsonConvert.SerializeObject(actOpinion);
+
+                _insightsService.TrackEvent(nameof(OpinionesController), new Dictionary<string, string> { { "Se ejecuta metodo => BorradoLogicoArchivoOpinion", $"{jsonData}" } }, GetClientIPAddress());
+
+                var resultado = await _businessLayer.ActualizarOpinion(actOpinion);
+
+                if (resultado == "Archivo de opiniÃ³n no encontrado.")
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, resultado);
+                }
+
+                return StatusCode(StatusCodes.Status200OK, resultado);
+            }
+            catch (Exception ex)
+            {
+                _insightsService.TrackException(ex, GetClientIPAddress());
+                return StatusCode(StatusCodes.Status500InternalServerError, string.Format("OcurriÃ³ un error general: {0}", ex.Message));
             }
         }
 
