@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cnbv.ConectaProcesos.Opiniones.Data.DatabaseConectaProcesos;
 
-public partial class ConectaProcesosContext : DbContext
+public partial class ConectaProcesosRefactorContext : DbContext
 {
-    public ConectaProcesosContext(DbContextOptions<ConectaProcesosContext> options)
+    public ConectaProcesosRefactorContext(DbContextOptions<ConectaProcesosRefactorContext> options)
         : base(options)
     {
     }
@@ -82,10 +82,19 @@ public partial class ConectaProcesosContext : DbContext
             entity.Property(e => e.Clave)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.ComentarioFirmante)
+                .HasMaxLength(255)
+                .IsUnicode(false);
             entity.Property(e => e.Comentarios).IsUnicode(false);
+            entity.Property(e => e.EstatusSolicitud)
+                .HasMaxLength(255)
+                .IsUnicode(false);
             entity.Property(e => e.FechaRespuesta).HasColumnType("datetime");
             entity.Property(e => e.FinalizadaPor)
                 .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.Firmante)
+                .HasMaxLength(255)
                 .IsUnicode(false);
             entity.Property(e => e.IdEnvio)
                 .HasMaxLength(50)

@@ -31,6 +31,12 @@ public partial class OpinionReceptor
 
     public string? Nombre { get; set; }
 
+    public string? Firmante { get; set; }
+
+    public string? EstatusSolicitud { get; set; }
+
+    public string? ComentarioFirmante { get; set; }
+
     public virtual ICollection<ArchivoOpinion> ArchivoOpinions { get; set; } = new List<ArchivoOpinion>();
 
     public virtual Opinion IdOpinionNavigation { get; set; } = null!;

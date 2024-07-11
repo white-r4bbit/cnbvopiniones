@@ -8,11 +8,11 @@ namespace Cnbv.ConectaProcesos.Opiniones.Data.Implementations
 {
   public class Repository<T> : IRepository<T> where T : class
   {
-    private readonly ConectaProcesosContext _context;
+    private readonly ConectaProcesosRefactorContext _context;
 
     private readonly DbSet<T> _dbSet;
 
-    public Repository(ConectaProcesosContext context)
+    public Repository(ConectaProcesosRefactorContext context)
     {
       _context = context;
       _dbSet = context.Set<T>();
