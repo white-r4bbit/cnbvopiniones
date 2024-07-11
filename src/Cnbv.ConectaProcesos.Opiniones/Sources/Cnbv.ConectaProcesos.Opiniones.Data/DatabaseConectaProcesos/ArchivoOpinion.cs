@@ -21,6 +21,8 @@ public partial class ArchivoOpinion
 
     public string? Nombre { get; set; }
 
+    public bool? Eliminado { get; set; }
+
     public virtual Opinion? IdOpinionNavigation { get; set; }
 
     public virtual OpinionReceptor? IdReceptorNavigation { get; set; }
