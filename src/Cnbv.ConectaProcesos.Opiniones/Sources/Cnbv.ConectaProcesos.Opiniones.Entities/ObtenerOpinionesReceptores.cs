@@ -23,5 +23,11 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
     public bool EnProceso { get; set; }
 
     public string? IdEnvio { get; set; }
+
+    public string Firmante { get; set; }
+
+    public string EstatusSolicitud { get; set; }
+
+    public string ComentarioFirmante { get; set; }
   }
 }

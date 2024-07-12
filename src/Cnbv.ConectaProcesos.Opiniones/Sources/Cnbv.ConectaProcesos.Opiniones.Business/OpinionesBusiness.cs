@@ -124,6 +124,10 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptor.Obligatoria = r.Obligatoria;
               receptor.EnProceso = r.Activa;
               receptor.IdEnvio = r.IdEnvio;
+              receptor.Firmante = r.Firmante;
+              receptor.EstatusSolicitud = r.EstatusSolicitud;
+              receptor.ComentarioFirmante = r.ComentarioFirmante;
+
               lista.Add(receptor);
             }
             opinionResponse.Receptores = lista.ToArray();
