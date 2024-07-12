@@ -10,8 +10,8 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
 
         public string CadenaOriginal { get; set; }
 
+        public ActualizarReceptor[] Receptor { get; set; }
+        
         public ArchivosModelActualizar[] Archivos { get; set; }
-
-        public ActualizarReceptor Receptor { get; set; }
     }
 }

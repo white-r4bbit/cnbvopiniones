@@ -9,5 +9,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
 
     public string ComentarioFirmante { get; set; }
 
+    public ArchivosModelActualizar[] Archivos { get; set; }
+
   }
 }

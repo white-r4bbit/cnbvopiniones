@@ -31,5 +31,4 @@ public partial class ArchivoOpinion
 
     public virtual TipoElementoEnum IdTipoElementoNavigation { get; set; } = null!;
 
-    public Boolean Eliminado { get; set; }
 }
