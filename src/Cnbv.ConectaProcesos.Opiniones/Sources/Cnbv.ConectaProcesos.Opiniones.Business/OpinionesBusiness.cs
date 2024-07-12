@@ -124,6 +124,10 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptor.Obligatoria = r.Obligatoria;
               receptor.EnProceso = r.Activa;
               receptor.IdEnvio = r.IdEnvio;
+              receptor.Firmante = r.Firmante;
+              receptor.EstatusSolicitud = r.EstatusSolicitud;
+              receptor.ComentarioFirmante = r.ComentarioFirmante;
+
               lista.Add(receptor);
             }
             opinionResponse.Receptores = lista.ToArray();
@@ -172,7 +176,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               //Archivos asociados al detalle de la opinion.
               var archivosOpinion = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdOpinion == idOpinion);
               archivosOpinion = archivosOpinion.OrderByDescending(a => a.FechaCreacion);
-
+              archivosOpinion = archivosOpinion.Where(a => a.Eliminado == false);
               List<ArchivosModelResponse> archivosRespuesta = new List<ArchivosModelResponse>();
               foreach (var archivoOpinion in archivosOpinion)
               {
@@ -206,6 +210,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptorRespuesta.EstatusSolicitud = opinionReceptor.EstatusSolicitud;
               receptorRespuesta.ComentarioFirmante = opinionReceptor.ComentarioFirmante;
               var archivosReceptor = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdReceptor == idOpinionReceptor);
+              archivosReceptor = archivosReceptor.Where(a => a.Eliminado == false);
 
               archivosReceptor = archivosReceptor.OrderByDescending(a => a.FechaCreacion);
 
