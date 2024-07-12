@@ -412,7 +412,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
                 throw new InvalidOperationException("Para finalizar una opinión interna se debe utilizar el método FinalizarOpinion.");
               }
               receptor.FechaRespuesta = DateTime.Now;
-              receptor.Activa = false; 
+              receptor.Activa = false;
 
               if (opinion.FirmaElectronica != null)
               {
@@ -547,7 +547,21 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
       }
     }
 
+    public async Task<string[]> SolicitudesPendientesFirma()
+    {
+      try
+      {
+        var solicitudes = await _opinionReceptorRepository.GetFilteredIncludingAsync(o => o.EstatusSolicitud != null && o.EstatusSolicitud.Equals("PENDIENTE DE FIRMA"), o => o.IdOpinionNavigation);
 
+        var folios = solicitudes.Select(i => i.IdOpinionNavigation.FolioAsunto);
+
+        return folios.ToArray();
+      }
+      catch
+      {
+        throw;
+      }
+    }
 
     private async Task<Opinion> GenerarNuevaOpinionAsync(SolicitarOpiniones solicitud)
     {
@@ -798,92 +812,92 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
       }
     }
 
-  /// <summary>
-  /// Actualiza la opinion.
-  /// </summary>
-  /// <param name="ActOpinion">Opinion a actualizar</param>
-  /// <returns></returns>
-  public async Task<string> ActualizarOpinion(ActualizarOpinion ActOpinion)
-  {
+    /// <summary>
+    /// Actualiza la opinion.
+    /// </summary>
+    /// <param name="ActOpinion">Opinion a actualizar</param>
+    /// <returns></returns>
+    public async Task<string> ActualizarOpinion(ActualizarOpinion ActOpinion)
+    {
       using (var transaction = await _opinionRepository.BeginTransactionAsync())
       {
-          try
+        try
+        {
+          // Obtener la opinión existente
+          var opinion = await _opinionRepository.GetByIdIncludingAsync(ActOpinion.Id, o => o.OpinionReceptors, o => o.ArchivoOpinions);
+          if (opinion == null)
           {
-              // Obtener la opinión existente
-              var opinion = await _opinionRepository.GetByIdIncludingAsync(ActOpinion.Id, o => o.OpinionReceptors, o => o.ArchivoOpinions);
-              if (opinion == null)
-              {
-                  return "Opinión no encontrada.";
-              }
-
-              // Actualizar campos de la opinión
-              opinion.SecuenciaFirma = ActOpinion.SecuenciaFirma;
-              opinion.CadenaOriginal = ActOpinion.CadenaOriginal;
-              opinion.Detalle = ActOpinion.Comentarios;
-
-              // Actualizar archivos y receptores de opinión
-              foreach (var recepOpinion in ActOpinion.Receptor)
-              {   
-                  var recep = await _opinionReceptorRepository.GetByIdIncludingAsync(recepOpinion.id, o => o.ArchivoOpinions) ?? new OpinionReceptor();
-
-                  recep.Firmante = recepOpinion.Firmante;
-                  recep.EstatusSolicitud = recepOpinion.EstatusSolicitud;
-                  recep.ComentarioFirmante = recepOpinion.ComentarioFirmante;
-
-                  foreach (var archivoOpinion in recepOpinion.Archivos)
-                  {   
-                      var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
-
-                      archivo.Ruta = archivoOpinion.Ruta;
-                      archivo.Nombre = archivoOpinion.Nombre;
-                      archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
-                      archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
-                      archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
-                      archivo.Eliminado = archivoOpinion.eliminado;
-
-                      // if (archivoOpinion.id == 0)
-                      // {
-                      //     opinion.ArchivoOpinions.Add(archivo);
-                      // }
-                      recep.ArchivoOpinions.Add(archivo);
-                  }
-                  await _opinionReceptorRepository.UpdateAsync(recep);
-
-                  // if (recepOpinion.id == 0)
-                  // {
-                  //     opinion.OpinionReceptors.Add(recep);
-                  // }
-              }
-
-              foreach (var archivoOpinion in ActOpinion.Archivos)
-                {
-                    var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
-
-                    archivo.Ruta = archivoOpinion.Ruta;
-                    archivo.Nombre = archivoOpinion.Nombre;
-                    archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
-                    archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
-                    archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
-                    archivo.Eliminado = archivoOpinion.eliminado;
-
-                    if (archivoOpinion.id == 0)
-                    {
-                        opinion.ArchivoOpinions.Add(archivo);
-                    }
-                }
-
-              // Actualizar la opinión en la base de datos
-              await _opinionRepository.UpdateAsync(opinion);
-              
-              await transaction.CommitAsync();
-
-              return "Opinión actualizada correctamente.";
+            return "Opinión no encontrada.";
           }
-          catch (Exception ex)
+
+          // Actualizar campos de la opinión
+          opinion.SecuenciaFirma = ActOpinion.SecuenciaFirma;
+          opinion.CadenaOriginal = ActOpinion.CadenaOriginal;
+          opinion.Detalle = ActOpinion.Comentarios;
+
+          // Actualizar archivos y receptores de opinión
+          foreach (var recepOpinion in ActOpinion.Receptor)
           {
-              await transaction.RollbackAsync();
-              return $"Error al actualizar la opinión: {ex.Message}";
+            var recep = await _opinionReceptorRepository.GetByIdIncludingAsync(recepOpinion.id, o => o.ArchivoOpinions) ?? new OpinionReceptor();
+
+            recep.Firmante = recepOpinion.Firmante;
+            recep.EstatusSolicitud = recepOpinion.EstatusSolicitud;
+            recep.ComentarioFirmante = recepOpinion.ComentarioFirmante;
+
+            foreach (var archivoOpinion in recepOpinion.Archivos)
+            {
+              var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+
+              archivo.Ruta = archivoOpinion.Ruta;
+              archivo.Nombre = archivoOpinion.Nombre;
+              archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
+              archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
+              archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
+              archivo.Eliminado = archivoOpinion.eliminado;
+
+              // if (archivoOpinion.id == 0)
+              // {
+              //     opinion.ArchivoOpinions.Add(archivo);
+              // }
+              recep.ArchivoOpinions.Add(archivo);
+            }
+            await _opinionReceptorRepository.UpdateAsync(recep);
+
+            // if (recepOpinion.id == 0)
+            // {
+            //     opinion.OpinionReceptors.Add(recep);
+            // }
           }
+
+          foreach (var archivoOpinion in ActOpinion.Archivos)
+          {
+            var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+
+            archivo.Ruta = archivoOpinion.Ruta;
+            archivo.Nombre = archivoOpinion.Nombre;
+            archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
+            archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
+            archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
+            archivo.Eliminado = archivoOpinion.eliminado;
+
+            if (archivoOpinion.id == 0)
+            {
+              opinion.ArchivoOpinions.Add(archivo);
+            }
+          }
+
+          // Actualizar la opinión en la base de datos
+          await _opinionRepository.UpdateAsync(opinion);
+
+          await transaction.CommitAsync();
+
+          return "Opinión actualizada correctamente.";
+        }
+        catch (Exception ex)
+        {
+          await transaction.RollbackAsync();
+          return $"Error al actualizar la opinión: {ex.Message}";
+        }
       }
     }
 
