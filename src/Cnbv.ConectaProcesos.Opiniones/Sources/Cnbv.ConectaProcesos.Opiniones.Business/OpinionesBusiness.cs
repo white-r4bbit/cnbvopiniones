@@ -173,10 +173,11 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               var archivosOpinion = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdOpinion == idOpinion);
               archivosOpinion = archivosOpinion.OrderByDescending(a => a.FechaCreacion);
 
-              List<ArchivosModel> archivosRespuesta = new List<ArchivosModel>();
+              List<ArchivosModelResponse> archivosRespuesta = new List<ArchivosModelResponse>();
               foreach (var archivoOpinion in archivosOpinion)
               {
-                ArchivosModel archivoRespuesta = new ArchivosModel();
+                ArchivosModelResponse archivoRespuesta = new ArchivosModelResponse();
+                archivoRespuesta.Id = archivoOpinion.Id;
                 archivoRespuesta.Ruta = archivoOpinion.Ruta ?? string.Empty;
                 archivoRespuesta.FechaCreacion = archivoOpinion.FechaCreacion;
                 archivoRespuesta.Nombre = archivoOpinion.Nombre;
@@ -196,11 +197,14 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptorRespuesta.Id = opinionReceptor.Id;
               receptorRespuesta.Clave = opinionReceptor.Clave;
               receptorRespuesta.Nombre = opinionReceptor.Nombre;
-              receptorRespuesta.Archivos = new List<ArchivosModel>();
+              receptorRespuesta.Archivos = new List<ArchivosModelResponse>();
               receptorRespuesta.FinalizadaPor = opinionReceptor.FinalizadaPor;
               receptorRespuesta.Comentarios = opinionReceptor.Comentarios;
               receptorRespuesta.FechaRespuesta = opinionReceptor.FechaRespuesta;
               receptorRespuesta.IdEnvio = opinionReceptor.IdEnvio;
+              receptorRespuesta.Firmante = opinionReceptor.Firmante;
+              receptorRespuesta.EstatusSolicitud = opinionReceptor.EstatusSolicitud;
+              receptorRespuesta.ComentarioFirmante = opinionReceptor.ComentarioFirmante;
               var archivosReceptor = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdReceptor == idOpinionReceptor);
 
               archivosReceptor = archivosReceptor.OrderByDescending(a => a.FechaCreacion);
@@ -208,7 +212,8 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               foreach (var archivoReceptor in archivosReceptor)
               {
                 //Generar objeto para llenar la lista
-                ArchivosModel archivoReceptorRespuesta = new ArchivosModel();
+                ArchivosModelResponse archivoReceptorRespuesta = new ArchivosModelResponse();
+                archivoReceptorRespuesta.Id = archivoReceptor.Id;
                 archivoReceptorRespuesta.Ruta = archivoReceptor.Ruta;
                 archivoReceptorRespuesta.FechaCreacion = archivoReceptor.FechaCreacion;
                 TipoElementoEnum elementoName = await _elementosRepository.GetByConditionAsync(i => i.Id == archivoReceptor.IdTipoElemento);

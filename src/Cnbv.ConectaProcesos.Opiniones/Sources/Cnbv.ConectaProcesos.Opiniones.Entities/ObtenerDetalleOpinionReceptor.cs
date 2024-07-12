@@ -20,8 +20,14 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
 
     public DateTime? FechaRespuesta { get; set; }
 
-    public List<ArchivosModel> Archivos { get; set; }
+    public List<ArchivosModelResponse> Archivos { get; set; }
 
     public string? IdEnvio { get; set; }
+
+    public string Firmante { get; set; }
+
+    public string EstatusSolicitud { get; set; }
+
+    public string ComentarioFirmante { get; set; }
   }
 }

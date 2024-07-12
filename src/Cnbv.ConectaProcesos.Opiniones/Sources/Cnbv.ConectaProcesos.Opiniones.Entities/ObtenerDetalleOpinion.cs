@@ -12,8 +12,9 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
 
         public string Comentarios { get; set; }
 
-        public ArchivosModel[] Archivos { get; set; }
+        public ArchivosModelResponse[] Archivos { get; set; }
 
         public ObtenerDetalleOpinionReceptor Receptor { get; set; }
+        
     }
 }
