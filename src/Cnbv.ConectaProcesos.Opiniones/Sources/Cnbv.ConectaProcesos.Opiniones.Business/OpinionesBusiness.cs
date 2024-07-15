@@ -25,9 +25,12 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
 
     private readonly KeyVaultService _keyVaultService;
 
-    public OpinionesBusiness(IRepository<Opinion> opinionRepository, IRepository<TipoElementoEnum> elementosRepository,
-                              IRepository<TipoDocumentoEnum> documentosRepository, IRepository<OpinionReceptor> opinionReceptorRepository, KeyVaultService keyVaultService,
-                              IRepository<ArchivoOpinion> archivoOpinionRepository)
+    public OpinionesBusiness(IRepository<Opinion> opinionRepository,
+                              IRepository<TipoElementoEnum> elementosRepository,
+                              IRepository<TipoDocumentoEnum> documentosRepository,
+                              IRepository<OpinionReceptor> opinionReceptorRepository,
+                              IRepository<ArchivoOpinion> archivoOpinionRepository,
+                              KeyVaultService keyVaultService)
     {
       _opinionRepository = opinionRepository;
       _opinionReceptorRepository = opinionReceptorRepository;
@@ -42,40 +45,45 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
     /// </summary>
     /// <param name="solicitud"> DTO que guarda la información necesaria para registrar una opinión. </param>
     /// <returns> Code response y string (identificador o mensaje con el mensaje de error). </returns>
-    public async Task<int> SolicitarOpinionesAsync(SolicitarOpiniones solicitud)
+    public async Task<OpinionCreateResponse> SolicitarOpinionesAsync(SolicitarOpiniones solicitud)
     {
       // Verificar que el folio que se está solicitando no se encuentra activo.
-      var opinionesActivas = await _opinionRepository.GetFilteredAsync(o => o.FolioAsunto == solicitud.FolioAsunto && o.Activa);
-      if (opinionesActivas.Any())
+      ////var opinionesActivas = await _opinionRepository.GetFilteredAsync(o => o.FolioAsunto == solicitud.FolioAsunto && o.Activa);
+      ////if (opinionesActivas.Any())
+      ////{
+      ////  throw new InvalidOperationException("Existe un proceso de opinión previo que no ha sido finalizado.");
+      ////}
+      ////else
+      ////{
+      //Inicializamos la función BeginTransaction para asegurar la integridad de la modificación de la base de datos a lo largo de las operaciones.
+      using (var transaction = await _opinionRepository.BeginTransactionAsync())
       {
-        throw new InvalidOperationException("Existe un proceso de opinión previo que no ha sido finalizado.");
-      }
-      else
-      {
-        //Inicializamos la función BeginTransaction para asegurar la integridad de la modificación de la base de datos a lo largo de las operaciones.
-        using (var transaction = await _opinionRepository.BeginTransactionAsync())
+        try
         {
-          try
-          {
-            //// Se genera el objeto opinión y se integran sus propiedades.
-            Opinion opinion = await GenerarNuevaOpinionAsync(solicitud);
-            await _opinionRepository.AddAsync(opinion);
-            // Se guarda la transacción.
-            await transaction.CommitAsync();
-            return opinion.Id;
-          }
-          catch (InvalidOperationException)
-          {
-            throw;
-          }
-          catch
-          {
-            // En caso de que haya ocurridó un error, los cambios echos a la base de datos se deshacen.
-            await transaction.RollbackAsync();
-            throw new DbUpdateException("Ocurrió un error al intentar almacenar la información de la opinión.");
-          }
+          //// Se genera el objeto opinión y se integran sus propiedades.
+          Opinion opinion = await GenerarNuevaOpinionAsync(solicitud);
+          await _opinionRepository.AddAsync(opinion);
+          // Se guarda la transacción.
+          await transaction.CommitAsync();
+
+          OpinionCreateResponse respuesta = new OpinionCreateResponse();
+          respuesta.Id = opinion.Id;
+          respuesta.Receptores = opinion.OpinionReceptors.Select(r => r.Id).ToArray();
+
+          return respuesta;
+        }
+        catch (InvalidOperationException)
+        {
+          throw;
+        }
+        catch
+        {
+          // En caso de que haya ocurridó un error, los cambios echos a la base de datos se deshacen.
+          await transaction.RollbackAsync();
+          throw new DbUpdateException("Ocurrió un error al intentar almacenar la información de la opinión.");
         }
       }
+      ////}
     }
 
 
@@ -278,6 +286,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
                 IdOpinion = archivosRequest.Id,
                 IdTipoElemento = (await _elementosRepository.GetByConditionAsync(t => t.Nombre == a.TipoElemento)).Id,
                 IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(t => t.Nombre == a.TipoDocumento)).Id,
+                Eliminado = false
               };
 
               opinionIncluding.ArchivoOpinions.Add(archivo);
@@ -552,17 +561,17 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
       }
     }
 
-    public async Task<string[]> SolicitudesPendientesFirma()
+    public async Task<string[]> MetodoPrueba(string cadenaPrueba)
     {
       try
       {
-        var solicitudes = await _opinionReceptorRepository.GetFilteredIncludingAsync(o => o.EstatusSolicitud != null && o.EstatusSolicitud.Equals("PENDIENTE DE FIRMA"), o => o.IdOpinionNavigation);
+        var x = await _opinionReceptorRepository.GetFilteredIncludingAsync(o => o.Firmante != null && o.Firmante.Equals(cadenaPrueba) && o.EstatusSolicitud != null && o.EstatusSolicitud.Equals("PENDIENTE DE FIRMA"), o => o.IdOpinionNavigation);
 
-        var folios = solicitudes.Select(i => i.IdOpinionNavigation.FolioAsunto);
+        var folios = x.Select(i => i.IdOpinionNavigation.FolioAsunto);
 
         return folios.ToArray();
       }
-      catch
+      catch (Exception e)
       {
         throw;
       }
@@ -836,20 +845,25 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
           }
 
           // Actualizar campos de la opinión
-          opinion.SecuenciaFirma = ActOpinion.SecuenciaFirma;
-          opinion.CadenaOriginal = ActOpinion.CadenaOriginal;
-          opinion.Detalle = ActOpinion.Comentarios;
 
-          // Actualizar archivos y receptores de opinión
-          foreach (var recepOpinion in ActOpinion.Receptor)
+          if (ActOpinion.SecuenciaFirma.HasValue)
           {
-            var recep = await _opinionReceptorRepository.GetByIdIncludingAsync(recepOpinion.id, o => o.ArchivoOpinions) ?? new OpinionReceptor();
+            opinion.SecuenciaFirma = ActOpinion.SecuenciaFirma.Value;
+          }
 
-            recep.Firmante = recepOpinion.Firmante;
-            recep.EstatusSolicitud = recepOpinion.EstatusSolicitud;
-            recep.ComentarioFirmante = recepOpinion.ComentarioFirmante;
+          if (ActOpinion.CadenaOriginal != null)
+          {
+            opinion.CadenaOriginal = ActOpinion.CadenaOriginal;
+          }
 
-            foreach (var archivoOpinion in recepOpinion.Archivos)
+          if (ActOpinion.Comentarios != null)
+          {
+            opinion.Detalle = ActOpinion.Comentarios;
+          }
+
+          if (ActOpinion.Archivos != null)
+          {
+            foreach (var archivoOpinion in ActOpinion.Archivos)
             {
               var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
 
@@ -860,35 +874,60 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
               archivo.Eliminado = archivoOpinion.eliminado;
 
-              // if (archivoOpinion.id == 0)
-              // {
-              //     opinion.ArchivoOpinions.Add(archivo);
-              // }
-              recep.ArchivoOpinions.Add(archivo);
+              if (archivoOpinion.id == 0)
+              {
+                archivo.Eliminado = false;
+                opinion.ArchivoOpinions.Add(archivo);
+              }
             }
-            await _opinionReceptorRepository.UpdateAsync(recep);
-
-            // if (recepOpinion.id == 0)
-            // {
-            //     opinion.OpinionReceptors.Add(recep);
-            // }
           }
 
-          foreach (var archivoOpinion in ActOpinion.Archivos)
+          // Actualizar archivos y receptores de opinión
+
+          if (ActOpinion.Receptor != null)
           {
-            var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+            var receptorRequest = ActOpinion.Receptor;
 
-            archivo.Ruta = archivoOpinion.Ruta;
-            archivo.Nombre = archivoOpinion.Nombre;
-            archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
-            archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
-            archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
-            archivo.Eliminado = archivoOpinion.eliminado;
+            var recep = await _opinionReceptorRepository.GetByIdIncludingAsync(ActOpinion.Receptor.id, o => o.ArchivoOpinions) ?? new OpinionReceptor();
 
-            if (archivoOpinion.id == 0)
+            if (receptorRequest.Firmante != null)
             {
-              opinion.ArchivoOpinions.Add(archivo);
+              recep.Firmante = ActOpinion.Receptor.Firmante;
             }
+
+            if (receptorRequest.EstatusSolicitud != null)
+            {
+              recep.EstatusSolicitud = ActOpinion.Receptor.EstatusSolicitud;
+            }
+
+            if (receptorRequest.ComentarioFirmante != null)
+            {
+              recep.ComentarioFirmante = ActOpinion.Receptor.ComentarioFirmante;
+            }
+
+            if (receptorRequest.Archivos != null)
+            {
+              foreach (var archivoOpinion in receptorRequest.Archivos)
+              {
+                var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+
+                archivo.Ruta = archivoOpinion.Ruta;
+                archivo.Nombre = archivoOpinion.Nombre;
+                archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
+                archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
+                archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
+                archivo.Eliminado = archivoOpinion.eliminado;
+
+                if (archivoOpinion.id == 0)
+                {
+                  archivo.Eliminado = false;
+                  recep.ArchivoOpinions.Add(archivo);
+                }
+              }
+            }
+
+            await _opinionReceptorRepository.UpdateAsync(recep);
+
           }
 
           // Actualizar la opinión en la base de datos

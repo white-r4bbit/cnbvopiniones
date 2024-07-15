@@ -15,7 +15,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
     /// </summary>
     /// <param name="solicitud"> DTO que guarda la información necesaria para registrar una opinión. </param>
     /// <returns> Code response y string (identificador o mensaje con el mensaje de error). </returns>
-    Task<int> SolicitarOpinionesAsync(SolicitarOpiniones solicitud);
+    Task<OpinionCreateResponse> SolicitarOpinionesAsync(SolicitarOpiniones solicitud);
 
 
     /// <summary>
@@ -69,6 +69,11 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
     /// <returns></returns>
     Task<string> ActualizarOpinion(ActualizarOpinion ActOpinion);
 
-    Task<string[]> SolicitudesPendientesFirma();
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="cadenaPrueba"></param>
+    /// <returns></returns>
+    Task<string[]> MetodoPrueba(string cadenaPrueba);
   }
 }

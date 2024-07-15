@@ -52,7 +52,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
     /// <returns>"true" si la operaci�n se ejecut� correctamente, "false" en caso contrario.</returns>
     [HttpPost]
     [Route("solicitaropiniones")]
-    [ProducesResponseType(typeof(int), 201)]
+    [ProducesResponseType(typeof(OpinionCreateResponse), 201)]
     [ProducesResponseType(typeof(string), 409)]
     [ProducesResponseType(typeof(string), 500)]
     [SwaggerOperation(OperationId = "SolicitarOpiniones")]
@@ -380,12 +380,12 @@ namespace Cnbv.ConectaProcesos.Opiniones.Api.Controllers
     [ProducesResponseType(typeof(string[]), 200)]
     [ProducesResponseType(typeof(string), 500)]
     [SwaggerOperation(OperationId = "ObtenerAsuntosPendienteFirma")]
-    public ActionResult ObtenerAsuntosPendienteFirma()
+    public async Task<ActionResult> ObtenerAsuntosPendienteFirma(string firmante)
     {
       try
       {
-        var folios = _businessLayer.SolicitudesPendientesFirma();
-        return StatusCode(StatusCodes.Status200OK, new string[] { });
+        var folios = await _businessLayer.MetodoPrueba(firmante);
+        return StatusCode(StatusCodes.Status200OK, folios);
       }
       catch (Exception ex)
       {
