@@ -17,5 +17,9 @@ namespace Cnbv.ConectaProcesos.Opiniones.Entities
     public bool EsObligatoria { get; set; }
 
     public Entidad? EntidadExterna { get; set; }
+
+    public string firmante { get; set; }
+
+    public string estatusSolicitud { get; set; }
   }
 }

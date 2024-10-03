@@ -30,4 +30,5 @@ public partial class ArchivoOpinion
     public virtual TipoDocumentoEnum IdTipoDocumentoNavigation { get; set; } = null!;
 
     public virtual TipoElementoEnum IdTipoElementoNavigation { get; set; } = null!;
+
 }

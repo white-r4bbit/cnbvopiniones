@@ -79,7 +79,7 @@ builder.Services.AddScoped<IOpinionesBusiness, OpinionesBusiness>();
 
 builder.Services.AddDbContext<ConectaProcesosRefactorContext>(options =>
 {
-  options.UseSqlServer("Server=172.16.132.77\\SQLDES3CS;Initial Catalog=ConectaProcesosRefactor;User Id=idgenConectaProcesos; Password=db*VqR_oebv18erbB0; Encrypt=False; TrustServerCertificate=False; ApplicationIntent=ReadWrite; MultiSubnetFailover=False; MultipleActiveResultSets=True");
+  options.UseSqlServer("Server=172.16.132.77\\SQLDES3CS;User=idgenConectaProcesos;Password=db*VqR_oebv18erbB0;Database=ConectaProcesosRefactor;Integrated Security=false;Encrypt=false");
 });
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

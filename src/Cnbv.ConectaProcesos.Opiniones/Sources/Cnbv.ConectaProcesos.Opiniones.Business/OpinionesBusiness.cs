@@ -25,9 +25,12 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
 
     private readonly KeyVaultService _keyVaultService;
 
-    public OpinionesBusiness(IRepository<Opinion> opinionRepository, IRepository<TipoElementoEnum> elementosRepository,
-                              IRepository<TipoDocumentoEnum> documentosRepository, IRepository<OpinionReceptor> opinionReceptorRepository, KeyVaultService keyVaultService,
-                              IRepository<ArchivoOpinion> archivoOpinionRepository)
+    public OpinionesBusiness(IRepository<Opinion> opinionRepository,
+                              IRepository<TipoElementoEnum> elementosRepository,
+                              IRepository<TipoDocumentoEnum> documentosRepository,
+                              IRepository<OpinionReceptor> opinionReceptorRepository,
+                              IRepository<ArchivoOpinion> archivoOpinionRepository,
+                              KeyVaultService keyVaultService)
     {
       _opinionRepository = opinionRepository;
       _opinionReceptorRepository = opinionReceptorRepository;
@@ -42,40 +45,45 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
     /// </summary>
     /// <param name="solicitud"> DTO que guarda la información necesaria para registrar una opinión. </param>
     /// <returns> Code response y string (identificador o mensaje con el mensaje de error). </returns>
-    public async Task<int> SolicitarOpinionesAsync(SolicitarOpiniones solicitud)
+    public async Task<OpinionCreateResponse> SolicitarOpinionesAsync(SolicitarOpiniones solicitud)
     {
       // Verificar que el folio que se está solicitando no se encuentra activo.
-      var opinionesActivas = await _opinionRepository.GetFilteredAsync(o => o.FolioAsunto == solicitud.FolioAsunto && o.Activa);
-      if (opinionesActivas.Any())
+      ////var opinionesActivas = await _opinionRepository.GetFilteredAsync(o => o.FolioAsunto == solicitud.FolioAsunto && o.Activa);
+      ////if (opinionesActivas.Any())
+      ////{
+      ////  throw new InvalidOperationException("Existe un proceso de opinión previo que no ha sido finalizado.");
+      ////}
+      ////else
+      ////{
+      //Inicializamos la función BeginTransaction para asegurar la integridad de la modificación de la base de datos a lo largo de las operaciones.
+      using (var transaction = await _opinionRepository.BeginTransactionAsync())
       {
-        throw new InvalidOperationException("Existe un proceso de opinión previo que no ha sido finalizado.");
-      }
-      else
-      {
-        //Inicializamos la función BeginTransaction para asegurar la integridad de la modificación de la base de datos a lo largo de las operaciones.
-        using (var transaction = await _opinionRepository.BeginTransactionAsync())
+        try
         {
-          try
-          {
-            //// Se genera el objeto opinión y se integran sus propiedades.
-            Opinion opinion = await GenerarNuevaOpinionAsync(solicitud);
-            await _opinionRepository.AddAsync(opinion);
-            // Se guarda la transacción.
-            await transaction.CommitAsync();
-            return opinion.Id;
-          }
-          catch (InvalidOperationException)
-          {
-            throw;
-          }
-          catch
-          {
-            // En caso de que haya ocurridó un error, los cambios echos a la base de datos se deshacen.
-            await transaction.RollbackAsync();
-            throw new DbUpdateException("Ocurrió un error al intentar almacenar la información de la opinión.");
-          }
+          //// Se genera el objeto opinión y se integran sus propiedades.
+          Opinion opinion = await GenerarNuevaOpinionAsync(solicitud);
+          await _opinionRepository.AddAsync(opinion);
+          // Se guarda la transacción.
+          await transaction.CommitAsync();
+
+          OpinionCreateResponse respuesta = new OpinionCreateResponse();
+          respuesta.Id = opinion.Id;
+          respuesta.Receptores = opinion.OpinionReceptors.Select(r => r.Id).ToArray();
+
+          return respuesta;
+        }
+        catch (InvalidOperationException)
+        {
+          throw;
+        }
+        catch
+        {
+          // En caso de que haya ocurridó un error, los cambios echos a la base de datos se deshacen.
+          await transaction.RollbackAsync();
+          throw new DbUpdateException("Ocurrió un error al intentar almacenar la información de la opinión.");
         }
       }
+      ////}
     }
 
 
@@ -124,6 +132,10 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptor.Obligatoria = r.Obligatoria;
               receptor.EnProceso = r.Activa;
               receptor.IdEnvio = r.IdEnvio;
+              receptor.Firmante = r.Firmante;
+              receptor.EstatusSolicitud = r.EstatusSolicitud;
+              receptor.ComentarioFirmante = r.ComentarioFirmante;
+
               lista.Add(receptor);
             }
             opinionResponse.Receptores = lista.ToArray();
@@ -172,11 +184,12 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               //Archivos asociados al detalle de la opinion.
               var archivosOpinion = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdOpinion == idOpinion);
               archivosOpinion = archivosOpinion.OrderByDescending(a => a.FechaCreacion);
-
-              List<ArchivosModel> archivosRespuesta = new List<ArchivosModel>();
+              archivosOpinion = archivosOpinion.Where(a => a.Eliminado == false);
+              List<ArchivosModelResponse> archivosRespuesta = new List<ArchivosModelResponse>();
               foreach (var archivoOpinion in archivosOpinion)
               {
-                ArchivosModel archivoRespuesta = new ArchivosModel();
+                ArchivosModelResponse archivoRespuesta = new ArchivosModelResponse();
+                archivoRespuesta.Id = archivoOpinion.Id;
                 archivoRespuesta.Ruta = archivoOpinion.Ruta ?? string.Empty;
                 archivoRespuesta.FechaCreacion = archivoOpinion.FechaCreacion;
                 archivoRespuesta.Nombre = archivoOpinion.Nombre;
@@ -197,19 +210,24 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
               receptorRespuesta.Id = opinionReceptor.Id;
               receptorRespuesta.Clave = opinionReceptor.Clave;
               receptorRespuesta.Nombre = opinionReceptor.Nombre;
-              receptorRespuesta.Archivos = new List<ArchivosModel>();
+              receptorRespuesta.Archivos = new List<ArchivosModelResponse>();
               receptorRespuesta.FinalizadaPor = opinionReceptor.FinalizadaPor;
               receptorRespuesta.Comentarios = opinionReceptor.Comentarios;
               receptorRespuesta.FechaRespuesta = opinionReceptor.FechaRespuesta;
               receptorRespuesta.IdEnvio = opinionReceptor.IdEnvio;
+              receptorRespuesta.Firmante = opinionReceptor.Firmante;
+              receptorRespuesta.EstatusSolicitud = opinionReceptor.EstatusSolicitud;
+              receptorRespuesta.ComentarioFirmante = opinionReceptor.ComentarioFirmante;
               var archivosReceptor = await _archivoOpinionRepository.GetFilteredAsync(i => i.IdReceptor == idOpinionReceptor);
+              archivosReceptor = archivosReceptor.Where(a => a.Eliminado == false);
 
               archivosReceptor = archivosReceptor.OrderByDescending(a => a.FechaCreacion);
 
               foreach (var archivoReceptor in archivosReceptor)
               {
                 //Generar objeto para llenar la lista
-                ArchivosModel archivoReceptorRespuesta = new ArchivosModel();
+                ArchivosModelResponse archivoReceptorRespuesta = new ArchivosModelResponse();
+                archivoReceptorRespuesta.Id = archivoReceptor.Id;
                 archivoReceptorRespuesta.Ruta = archivoReceptor.Ruta;
                 archivoReceptorRespuesta.FechaCreacion = archivoReceptor.FechaCreacion;
                 TipoElementoEnum elementoName = await _elementosRepository.GetByConditionAsync(i => i.Id == archivoReceptor.IdTipoElemento);
@@ -269,6 +287,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
                 IdOpinion = archivosRequest.Id,
                 IdTipoElemento = (await _elementosRepository.GetByConditionAsync(t => t.Nombre == a.TipoElemento)).Id,
                 IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(t => t.Nombre == a.TipoDocumento)).Id,
+                Eliminado = false
               };
 
               opinionIncluding.ArchivoOpinions.Add(archivo);
@@ -408,7 +427,7 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
                 throw new InvalidOperationException("Para finalizar una opinión interna se debe utilizar el método FinalizarOpinion.");
               }
               receptor.FechaRespuesta = DateTime.Now;
-              receptor.Activa = false; 
+              receptor.Activa = false;
 
               if (opinion.FirmaElectronica != null)
               {
@@ -543,7 +562,21 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
       }
     }
 
+    public async Task<string[]> MetodoPrueba(string cadenaPrueba)
+    {
+      try
+      {
+        var x = await _opinionReceptorRepository.GetFilteredIncludingAsync(o => o.Firmante != null && o.Firmante.Equals(cadenaPrueba) && o.EstatusSolicitud != null && o.EstatusSolicitud.Equals("PENDIENTE DE FIRMA"), o => o.IdOpinionNavigation);
 
+        var folios = x.Select(i => i.IdOpinionNavigation.FolioAsunto);
+
+        return folios.ToArray();
+      }
+      catch (Exception e)
+      {
+        throw;
+      }
+    }
 
     private async Task<Opinion> GenerarNuevaOpinionAsync(SolicitarOpiniones solicitud)
     {
@@ -578,6 +611,8 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
         receptor.Interno = r.EsInterna;
         receptor.Activa = true;
         receptor.IdOpinion = opinion.Id;
+        receptor.Firmante = r.firmante;
+        receptor.EstatusSolicitud = r.estatusSolicitud;
 
         if (!r.EsInterna)
         {
@@ -791,5 +826,131 @@ namespace Cnbv.ConectaProcesos.Opiniones.Business
         }
       }
     }
+
+    /// <summary>
+    /// Actualiza la opinion.
+    /// </summary>
+    /// <param name="ActOpinion">Opinion a actualizar</param>
+    /// <returns></returns>
+    public async Task<string> ActualizarOpinion(ActualizarOpinion ActOpinion)
+    {
+      using (var transaction = await _opinionRepository.BeginTransactionAsync())
+      {
+        try
+        {
+          // Obtener la opinión existente
+          var opinion = await _opinionRepository.GetByIdIncludingAsync(ActOpinion.Id, o => o.OpinionReceptors, o => o.ArchivoOpinions);
+          if (opinion == null)
+          {
+            return "Opinión no encontrada.";
+          }
+
+          // Actualizar campos de la opinión
+
+          if (ActOpinion.SecuenciaFirma.HasValue)
+          {
+            opinion.SecuenciaFirma = ActOpinion.SecuenciaFirma.Value;
+          }
+
+          if (ActOpinion.CadenaOriginal != null)
+          {
+            opinion.CadenaOriginal = ActOpinion.CadenaOriginal;
+          }
+
+          if (ActOpinion.Comentarios != null)
+          {
+            opinion.Detalle = ActOpinion.Comentarios;
+          }
+
+          if (ActOpinion.Archivos != null)
+          {
+            foreach (var archivoOpinion in ActOpinion.Archivos)
+            {
+              var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+
+              archivo.Ruta = archivoOpinion.Ruta;
+              archivo.Nombre = archivoOpinion.Nombre;
+              archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
+              archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
+              archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
+              archivo.Eliminado = archivoOpinion.eliminado;
+
+              if (archivoOpinion.id == 0)
+              {
+                archivo.Eliminado = false;
+                opinion.ArchivoOpinions.Add(archivo);
+              }
+            }
+          }
+
+          // Actualizar archivos y receptores de opinión
+
+          if (ActOpinion.Receptor != null)
+          {
+            var receptorRequest = ActOpinion.Receptor;
+
+            var recep = await _opinionReceptorRepository.GetByIdIncludingAsync(ActOpinion.Receptor.id, o => o.ArchivoOpinions) ?? new OpinionReceptor();
+
+            if (receptorRequest.Firmante != null)
+            {
+              recep.Firmante = ActOpinion.Receptor.Firmante;
+            }
+
+            if (receptorRequest.EstatusSolicitud != null)
+            {
+              recep.EstatusSolicitud = ActOpinion.Receptor.EstatusSolicitud;
+            }
+
+            if (receptorRequest.ComentarioFirmante != null)
+            {
+              recep.ComentarioFirmante = ActOpinion.Receptor.ComentarioFirmante;
+            }
+
+            if (receptorRequest.Archivos != null)
+            {
+              foreach (var archivoOpinion in receptorRequest.Archivos)
+              {
+                var archivo = opinion.ArchivoOpinions.FirstOrDefault(a => a.Id == archivoOpinion.id) ?? new ArchivoOpinion();
+
+                archivo.Ruta = archivoOpinion.Ruta;
+                archivo.Nombre = archivoOpinion.Nombre;
+                archivo.FechaCreacion = archivoOpinion.FechaCreacion.Value;
+                archivo.IdTipoElemento = (await _elementosRepository.GetByConditionAsync(e => e.Nombre == archivoOpinion.TipoElemento)).Id;
+                archivo.IdTipoDocumento = (await _documentosRepository.GetByConditionAsync(d => d.Nombre == archivoOpinion.TipoDocumento)).Id;
+                archivo.Eliminado = archivoOpinion.eliminado;
+
+                if (archivoOpinion.id == 0)
+                {
+                  archivo.Eliminado = false;
+                  recep.ArchivoOpinions.Add(archivo);
+                }
+              }
+            }
+
+            await _opinionReceptorRepository.UpdateAsync(recep);
+
+          }
+
+          // Actualizar la opinión en la base de datos
+          await _opinionRepository.UpdateAsync(opinion);
+
+          await transaction.CommitAsync();
+
+          return "Opinión actualizada correctamente.";
+        }
+        catch (Exception ex)
+        {
+          await transaction.RollbackAsync();
+          return $"Error al actualizar la opinión: {ex.Message}";
+        }
+      }
+    }
+
   }
+<<<<<<< HEAD
 }
+=======
+
+}
+
+>>>>>>> ccc2cd58958f245f9d53eeb9d51c243fdc0f3e57
